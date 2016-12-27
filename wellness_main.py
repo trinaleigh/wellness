@@ -44,12 +44,12 @@ class week(object):
         return self.name
 
 
-# TESTS
-#
-# test building / updating a week
-testWeek = week("test",1,2017)
-print testWeek
-testWeek.updateBehavior([1000,1000,1000,1000,2000,2000,1000],"calories")
-print testWeek.calories
-testWeek.updateSingle(3000,"calories",5)
-print testWeek.calories
+# # TESTS
+# #
+# # test building / updating a week
+# testWeek = week("test",1,2017)
+# print testWeek
+# testWeek.updateBehavior([1000,1000,1000,1000,2000,2000,1000],"calories")
+# print testWeek.calories
+# testWeek.updateSingle(3000,"calories",5)
+# print testWeek.calories
