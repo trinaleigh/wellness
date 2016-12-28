@@ -1,12 +1,13 @@
 import pylab
 
+
 class week(object):
     """
     represents a single week and associated targets
     """
 
-    def __init__(self, name, weekNumber, year):
-        self.name =  "Week " + str(weekNumber) + " " + str(year)
+    def __init__(self, weekNumber, year):
+        self.name = "Week " + str(weekNumber) + " " + str(year)
         self.weekNumber = weekNumber
         self.year = year
         # create empty placeholders for the behaviors we want to track:
@@ -20,7 +21,6 @@ class week(object):
         """
         if len(userVals) != 7:
             raise ValueError('Weekly behavior input should include 7 values')
-
         if behavior == "calorie":
             self.calories = userVals
         elif behavior == "workout":
@@ -42,14 +42,15 @@ class week(object):
     def __str__(self):
         return self.name
 
+
 def planWeek(behavior):
     """
     prompts the user to enter goals for the week
     """
-    daysOfWeek= ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    i=0
+    daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    i = 0
     goals = []
-    while i<7:
+    while i < 7:
         day = daysOfWeek[i]
         while True:
             target = raw_input("Please enter %s goal for %s" % (behavior, day))
@@ -63,10 +64,20 @@ def planWeek(behavior):
     return goals
 
 
+def plotWeek(goals,actual):
+    x=range(1,8)
+    pylab.plot(x, goals, '-g', label = "Target")
+    pylab.plot(x, actual, '-r', label = "Logged")
+    pylab.ylim(0,max((max(goals),max(actual)))*1.2)
+    pylab.legend()
+    pylab.show()
+
+
+
 # # TESTS
 #
 # # building / updating a week
-# testWeek = week("test",1,2017)
+# testWeek = week(1,2017)
 # print testWeek
 # testWeek.updateWeek([1000,1000,1000,1000,2000,2000,1000],"calorie")
 # print testWeek.calories
@@ -76,3 +87,9 @@ def planWeek(behavior):
 # # entering goals
 # planWeek("workout")
 # planWeek("calorie")
+#
+# # plot
+# goal1=[2000,1000,1000,1000,1000,1000,1200]
+# actual1=[2000,2000,1500,800,1000,800,1200]
+# plotWeek(goal1,actual1)
+
