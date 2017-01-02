@@ -14,9 +14,9 @@ class week(object):
         self.weekNumber = weekNumber
         self.year = year
         # create empty placeholders for the behaviors we want to track:
-        self.calories = [0]*7
-        self.workouts = [0]*7
-        self.meditation = [0]*7
+        self.diary = {}
+        for i in behaviors:
+            self.diary[i] = [0]*7
 
     def updateWeek(self, behavior, userVals):
         """
@@ -24,23 +24,13 @@ class week(object):
         """
         if len(userVals) != 7:
             raise ValueError('Weekly behavior input should include 7 values')
-        if behavior == 'calorie':
-            self.calories = userVals
-        elif behavior == 'workout':
-            self.workouts = userVals
-        else:
-            self.meditation = userVals
+        self.diary[behavior] = userVals
 
     def updateSingle(self, behavior, dayOfWeek, singleVal):
         """
         updates a single day's value
         """
-        if behavior == 'calorie':
-            self.calories[dayOfWeek] = singleVal
-        elif behavior == 'workout':
-            self.workouts[dayOfWeek] = singleVal
-        else:
-            self.meditation[dayOfWeek] = singleVal
+        self.diary[behavior][dayOfWeek] = singleVal
 
     def __str__(self):
         return self.name
@@ -130,8 +120,8 @@ def enterData():
     newWeek = week(weekNum, '2017')
     realWeek = week(weekNum, '2017')
     while True:
-        mode2 = raw_input('Enter "p" to plan your week or "d" to add a diary entry.')
-        if mode2 in ['p','d']:
+        mode2 = raw_input('Enter "p" to plan your week or "r" to record a diary entry.')
+        if mode2 in ['p','r']:
             if mode2 == 'p':
                 updates = planWeekAll()
                 for i in updates:
@@ -158,12 +148,17 @@ def initialize():
     """
     print 'Welcome to the wellness app.'
     while True:
-        mode1 = raw_input('Enter "e" to access your diary, "v" to see progress, or "q" to quit.')
-        if mode1 in ['e', 'v', 'q']:
-            if mode1 == 'e':
+        mode1 = raw_input('Enter "d" to access your diary, "v" to see progress, or "q" to quit.')
+        if mode1 in ['d', 'v', 'q']:
+            if mode1 == 'd':
                 weeks = enterData()
             elif mode1 == 'v':
-                plotWeek(weeks[0].calories, weeks[1].calories)
+                for i in behaviors:
+                    try:
+                        plotWeek(weeks[0].diary[i], weeks[1].diary[i])
+                    except UnboundLocalError:
+                        print 'You have not logged any data yet. Please try the diary.'
+                        break
             else:
                 print "Bye!"
                 break
@@ -176,10 +171,10 @@ def initialize():
 # # building / updating a week
 # testWeek = week(1,2017)
 # print testWeek
-# testWeek.updateWeek("calorie", [1000,1000,1000,1000,2000,2000,1000])
-# print testWeek.calories
-# testWeek.updateSingle("calorie",5,3000)
-# print testWeek.calories
+# testWeek.updateWeek('calorie', [1000,1000,1000,1000,2000,2000,1000])
+# print testWeek.diary
+# testWeek.updateSingle('calorie',5,3000)
+# print testWeek.diary
 #
 # # entering goals
 # planWeek("workout")
@@ -192,6 +187,6 @@ def initialize():
 #
 # # diary entry
 # diary('calorie',3)
-#
-# # initialization
-# initialize()
+
+# initialization
+initialize()
