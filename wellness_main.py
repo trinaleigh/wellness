@@ -96,12 +96,20 @@ def diaryAll(dayNum):
 
 
 def plotWeek(goals,actual):
-    x = range(1,8)
-    pylab.plot(x, goals, '-g', label = 'Target')
-    pylab.plot(x, actual, '-r', label = 'Logged')
-    pylab.ylim(0, max((max(goals), max(actual)))*1.2)
-    pylab.legend()
-    pylab.show()
+    """
+    takes target week and actual week
+    plots all behaviors
+    """
+    x = range(1, 8)
+    plotNum = 1
+    for i in behaviors:
+        pylab.figure(plotNum)
+        pylab.plot(x, goals[i], '-g', label = 'Target')
+        pylab.plot(x, actual[i], '-r', label = 'Logged')
+        pylab.ylim(0, max((max(goals[i]), max(actual[i])))*1.2)
+        pylab.legend()
+        pylab.show()
+        plotNum += 1
 
 
 def enterData(weekNum):
@@ -131,7 +139,7 @@ def enterData(weekNum):
                 updates = diaryAll(dayNum)
                 for i in updates:
                     userActuals[weekNum].updateSingle(i[0], dayNum, i[1])
-            return (userActuals[weekNum], userGoals[weekNum])
+            return (userGoals[weekNum], userActuals[weekNum])
         else:
             print 'Please try again.'
 
@@ -157,12 +165,10 @@ def initialize():
             if mode1 == 'd':
                 weeks = enterData(weekNum)
             elif mode1 == 'v':
-                for i in behaviors:
-                    try:
-                        plotWeek(weeks[0].diary[i], weeks[1].diary[i])
-                    except UnboundLocalError:
-                        print 'You have not logged any data yet. Please try the diary.'
-                        break
+                try:
+                    plotWeek(weeks[0].diary, weeks[1].diary)
+                except UnboundLocalError:
+                    print 'You have not logged any data yet. Please try the diary.'
             else:
                 print "Bye!"
                 break
