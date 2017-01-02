@@ -3,6 +3,8 @@ import pylab
 daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 behaviors = ['calorie', 'workout', 'meditation']
 
+userGoals = {}
+userActuals = {}
 
 class week(object):
     """
@@ -102,30 +104,22 @@ def plotWeek(goals,actual):
     pylab.show()
 
 
-def enterData():
+def enterData(weekNum):
     """
     enables user input for planning or diary mode
     returns the target week and the actual week
     """
-    while True:
-        weekNum = raw_input('Enter the week number (1-52)')
-        try:
-            weekNum = int(weekNum)
-            if weekNum in range(1, 53):
-                break
-            else:
-                print 'Please try again.'
-        except ValueError:
-            print 'Please try again.'
-    newWeek = week(weekNum, '2017')
-    realWeek = week(weekNum, '2017')
+    if weekNum not in userGoals.keys():
+        userGoals[weekNum] = week(weekNum, '2017')
+    if weekNum not in userActuals.keys():
+        userActuals[weekNum] = week(weekNum, '2017')
     while True:
         mode2 = raw_input('Enter "p" to plan your week or "r" to record a diary entry.')
         if mode2 in ['p','r']:
             if mode2 == 'p':
                 updates = planWeekAll()
                 for i in updates:
-                    newWeek.updateWeek(i[0], i[1])
+                    userGoals[weekNum].updateWeek(i[0], i[1])
             else:
                 while True:
                     currentDay = raw_input('Enter the day (Sunday-Saturday)')
@@ -136,8 +130,8 @@ def enterData():
                         print 'Please try again.'
                 updates = diaryAll(dayNum)
                 for i in updates:
-                    realWeek.updateSingle(i[0], dayNum, i[1])
-            return (newWeek, realWeek)
+                    userActuals[weekNum].updateSingle(i[0], dayNum, i[1])
+            return (userActuals[weekNum], userGoals[weekNum])
         else:
             print 'Please try again.'
 
@@ -148,10 +142,20 @@ def initialize():
     """
     print 'Welcome to the wellness app.'
     while True:
+        weekNum = raw_input('Enter the week number (1-52)')
+        try:
+            weekNum = int(weekNum)
+            if weekNum in range(1, 53):
+                break
+            else:
+                print 'Please try again.'
+        except ValueError:
+            print 'Please try again.'
+    while True:
         mode1 = raw_input('Enter "d" to access your diary, "v" to see progress, or "q" to quit.')
         if mode1 in ['d', 'v', 'q']:
             if mode1 == 'd':
-                weeks = enterData()
+                weeks = enterData(weekNum)
             elif mode1 == 'v':
                 for i in behaviors:
                     try:
