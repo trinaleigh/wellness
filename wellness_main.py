@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 
 daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-# # short list for testing
-# behaviors = ['calorie']
+# short list for testing
+behaviors = ['calorie']
 
-# full list
-behaviors = ['calorie', 'workout', 'meditation']
+# # full list
+# behaviors = ['calorie', 'workout', 'meditation']
 
 from pymongo import MongoClient
 client = MongoClient()
@@ -110,7 +110,7 @@ def journalAll(dayNum):
     return actualList
 
 
-def plotWeek(goals,actual):
+def plotWeek(goals,actual={}):
     """
     takes target week and actual week
     plots all behaviors
@@ -120,8 +120,11 @@ def plotWeek(goals,actual):
     for i in behaviors:
         plt.figure(plotNum)
         plt.plot(x, goals[i], '-g', label = 'Target')
-        plt.plot(x, actual[i], '-r', label = 'Logged')
-        plt.ylim(0, max((max(goals[i]), max(actual[i])))*1.2)
+        if actual != {}:
+            plt.plot(x, actual[i], '-r', label = 'Logged')
+            plt.ylim(0, max((max(goals[i]), max(actual[i])))*1.2)
+        else:
+            plt.ylim(0, max(goals[i])* 1.2)
         plt.legend()
         plt.show()
         plotNum += 1
@@ -168,13 +171,18 @@ def loaddb():
         loadWeek.journal = document["journal"]
         userGoals[document["week"]] = loadWeek
 
-    return userGoals
+    for document in actualData:
+        loadWeek = week(document["week"], document["year"], document["category"], document["user"])
+        loadWeek.journal = document["journal"]
+        userActuals[document["week"]] = loadWeek
+
+    return userGoals, userActuals
 
 def initialize():
     """
     runs the user interface
     """
-    userGoals = loaddb()
+    userGoals, userActuals = loaddb()
     print('Welcome to the wellness app.')
     while True:
         mode0 = input('Enter "s" select a week or "q" to quit.')
@@ -197,7 +205,7 @@ def initialize():
                             enterData(weekNum)
                         elif mode1 == 'v':
                             try:
-                                plotWeek(userGoals[weekNum].journal, userActuals[weekNum].journal)
+                                plotWeek(userGoals[weekNum].journal, (userActuals[weekNum].journal if weekNum in userActuals.keys() else {}))
                             except KeyError:
                                 print('You have not logged any data yet. Please try writing to the journal first.')
                         else:
@@ -228,10 +236,10 @@ def initialize():
 #
 # # plot
 # plotWeek(testWeek.journal,testWeek.journal)
+# plotWeek(testWeek.journal)
 #
 # # journal entry
 # journal('calorie',3)
-
 #
 # # db access
 # cursor = coll.find({"user": "kls"})
