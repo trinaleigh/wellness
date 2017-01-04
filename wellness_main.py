@@ -2,11 +2,17 @@ import matplotlib.pyplot as plt
 
 daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-# short list for testing
-behaviors = ['calorie']
+# # short list for testing
+# behaviors = ['calorie']
 
-# # full list
-# behaviors = ['calorie', 'workout', 'meditation']
+# full list
+behaviors = ['calorie', 'workout', 'meditation']
+
+from pymongo import MongoClient
+client = MongoClient()
+
+db = client.wellnessdb
+coll = db.weeks
 
 userGoals = {}
 userActuals = {}
@@ -16,15 +22,16 @@ class week(object):
     represents a single week and associated targets
     """
 
-    def __init__(self, weekNumber, year, currentUser):
+    def __init__(self, weekNumber, year, category, currentUser):
         self.name = 'Week ' + str(weekNumber) + ' ' + str(year)
         self.weekNumber = weekNumber
         self.year = year
+        self.category = category
+        self.user = currentUser
         # create empty placeholders for the behaviors we want to track:
         self.journal = {}
         for i in behaviors:
             self.journal[i] = [0]*7
-        self.username = currentUser
 
     def updateWeek(self, behavior, userVals):
         """
@@ -126,9 +133,9 @@ def enterData(weekNum):
     returns the target week and the actual week
     """
     if weekNum not in userGoals.keys():
-        userGoals[weekNum] = week(weekNum, '2017','kls')
+        userGoals[weekNum] = week(weekNum, '2017','goal','kls')
     if weekNum not in userActuals.keys():
-        userActuals[weekNum] = week(weekNum, '2017','kls')
+        userActuals[weekNum] = week(weekNum, '2017','actual','kls')
     while True:
         mode2 = input('Enter "p" to plan your week or "r" to record a journal entry.')
         if mode2 in ['p','r']:
@@ -151,11 +158,23 @@ def enterData(weekNum):
         else:
             print('Please try again.')
 
+def loaddb():
+
+    goalData= coll.find({"category": "goal"})
+    actualData = coll.find({"category": "actual"})
+
+    for document in goalData:
+        loadWeek = week(document["week"], document["year"], document["category"], document["user"])
+        loadWeek.journal = document["journal"]
+        userGoals[document["week"]] = loadWeek
+
+    return userGoals
 
 def initialize():
     """
     runs the user interface
     """
+    userGoals = loaddb()
     print('Welcome to the wellness app.')
     while True:
         mode0 = input('Enter "s" select a week or "q" to quit.')
@@ -196,7 +215,7 @@ def initialize():
 # # TESTS
 #
 # # building / updating a week
-# testWeek = week(1,2017,'kls')
+# testWeek = week(1,2017,'goal','kls')
 # print(testWeek)
 # testWeek.updateWeek('calorie', [1000,1000,1000,1000,2000,2000,1000])
 # print(testWeek.journal)
@@ -212,6 +231,20 @@ def initialize():
 #
 # # journal entry
 # journal('calorie',3)
+
 #
+# # db access
+# cursor = coll.find({"user": "kls"})
+# for document in cursor:
+#     print(document)
+#     print(document['year'])
+#
+# # loading data
+# print(userGoals)
+# print(userGoals[1].journal)
+#
+# # loading data (fcn)
+# print(loaddb())
+
 # initialization
 initialize()
