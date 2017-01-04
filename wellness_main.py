@@ -16,14 +16,15 @@ class week(object):
     represents a single week and associated targets
     """
 
-    def __init__(self, weekNumber, year):
+    def __init__(self, weekNumber, year, currentUser):
         self.name = 'Week ' + str(weekNumber) + ' ' + str(year)
         self.weekNumber = weekNumber
         self.year = year
         # create empty placeholders for the behaviors we want to track:
-        self.diary = {}
+        self.journal = {}
         for i in behaviors:
-            self.diary[i] = [0]*7
+            self.journal[i] = [0]*7
+        self.username = currentUser
 
     def updateWeek(self, behavior, userVals):
         """
@@ -31,13 +32,13 @@ class week(object):
         """
         if len(userVals) != 7:
             raise ValueError('Weekly behavior input should include 7 values')
-        self.diary[behavior] = userVals
+        self.journal[behavior] = userVals
 
     def updateSingle(self, behavior, dayOfWeek, singleVal):
         """
         updates a single day's value
         """
-        self.diary[behavior][dayOfWeek] = singleVal
+        self.journal[behavior][dayOfWeek] = singleVal
 
     def __str__(self):
         return self.name
@@ -75,9 +76,9 @@ def planWeekAll():
     return goalList
 
 
-def diary(behavior, dayNum):
+def journal(behavior, dayNum):
     """
-    prompts the user for diary entry
+    prompts the user for journal entry
     returns a value for the given behavior and day
     """
     day = daysOfWeek[dayNum]
@@ -91,14 +92,14 @@ def diary(behavior, dayNum):
     return actualValue
 
 
-def diaryAll(dayNum):
+def journalAll(dayNum):
     """
-    calls diary for all behaviors
-    returns a list of tuples representing all behaviors and diary entries for one day
+    calls journal for all behaviors
+    returns a list of tuples representing all behaviors and journal entries for one day
     """
     actualList = []
     for behavior in behaviors:
-        actualList.append((behavior, diary(behavior,dayNum)))
+        actualList.append((behavior, journal(behavior,dayNum)))
     return actualList
 
 
@@ -121,15 +122,15 @@ def plotWeek(goals,actual):
 
 def enterData(weekNum):
     """
-    enables user input for planning or diary mode
+    enables user input for planning or journal mode
     returns the target week and the actual week
     """
     if weekNum not in userGoals.keys():
-        userGoals[weekNum] = week(weekNum, '2017')
+        userGoals[weekNum] = week(weekNum, '2017','kls')
     if weekNum not in userActuals.keys():
-        userActuals[weekNum] = week(weekNum, '2017')
+        userActuals[weekNum] = week(weekNum, '2017','kls')
     while True:
-        mode2 = input('Enter "p" to plan your week or "r" to record a diary entry.')
+        mode2 = input('Enter "p" to plan your week or "r" to record a journal entry.')
         if mode2 in ['p','r']:
             if mode2 == 'p':
                 updates = planWeekAll()
@@ -143,7 +144,7 @@ def enterData(weekNum):
                         break
                     else:
                         print('Please try again.')
-                updates = diaryAll(dayNum)
+                updates = journalAll(dayNum)
                 for i in updates:
                     userActuals[weekNum].updateSingle(i[0], dayNum, i[1])
             return userGoals[weekNum], userActuals[weekNum]
@@ -171,15 +172,15 @@ def initialize():
                     except ValueError:
                         print('Please try again.')
                 while True:
-                    mode1 = input('Enter "w" to write to your diary, "v" to view progress, or "b" to go back.')
+                    mode1 = input('Enter "w" to write to your journal, "v" to view progress, or "b" to go back.')
                     if mode1 in ['w', 'v', 'b']:
                         if mode1 == 'w':
                             enterData(weekNum)
                         elif mode1 == 'v':
                             try:
-                                plotWeek(userGoals[weekNum].diary, userActuals[weekNum].diary)
+                                plotWeek(userGoals[weekNum].journal, userActuals[weekNum].journal)
                             except KeyError:
-                                print('You have not logged any data yet. Please try writing to the diary first.')
+                                print('You have not logged any data yet. Please try writing to the journal first.')
                         else:
                             break
                     else:
@@ -195,22 +196,22 @@ def initialize():
 # # TESTS
 #
 # # building / updating a week
-# testWeek = week(1,2017)
+# testWeek = week(1,2017,'kls')
 # print(testWeek)
 # testWeek.updateWeek('calorie', [1000,1000,1000,1000,2000,2000,1000])
-# print(testWeek.diary)
+# print(testWeek.journal)
 # testWeek.updateSingle('calorie',5,3000)
-# print(testWeek.diary)
+# print(testWeek.journal)
 #
 # # entering goals
 # planWeek("workout")
 # planWeek("calorie")
 #
 # # plot
-# plotWeek(testWeek.diary,testWeek.diary)
+# plotWeek(testWeek.journal,testWeek.journal)
 #
-# # diary entry
-# diary('calorie',3)
+# # journal entry
+# journal('calorie',3)
 #
 # initialization
 initialize()
