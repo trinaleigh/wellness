@@ -174,12 +174,12 @@ def initialize():
                     mode1 = input('Enter "w" to write to your diary, "v" to view progress, or "b" to go back.')
                     if mode1 in ['w', 'v', 'b']:
                         if mode1 == 'w':
-                            weeks = enterData(weekNum)
+                            enterData(weekNum)
                         elif mode1 == 'v':
                             try:
-                                plotWeek(weeks[0].diary, weeks[1].diary)
-                            except UnboundLocalError:
-                                print('You have not logged any data yet. Please try the diary.')
+                                plotWeek(userGoals[weekNum].diary, userActuals[weekNum].diary)
+                            except KeyError:
+                                print('You have not logged any data yet. Please try writing to the diary first.')
                         else:
                             break
                     else:
