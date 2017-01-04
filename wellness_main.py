@@ -1,7 +1,12 @@
 import matplotlib.pyplot as plt
 
 daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-behaviors = ['calorie', 'workout', 'meditation']
+
+# short list for testing
+behaviors = ['calorie']
+
+# # full list
+# behaviors = ['calorie', 'workout', 'meditation']
 
 userGoals = {}
 userActuals = {}
@@ -40,7 +45,7 @@ class week(object):
 
 def planWeek(behavior):
     """
-    prompts the user to enter goals for the week
+    given a single behavior, prompts the user to enter goals for the week
     returns a list of goals
     """
     i = 0
@@ -53,7 +58,7 @@ def planWeek(behavior):
                 target = int(target)
                 break
             except ValueError:
-                print ('Please enter a number')
+                print('Please enter a number')
         goals.append(target)
         i += 1
     return goals
@@ -61,6 +66,7 @@ def planWeek(behavior):
 
 def planWeekAll():
     """
+    calls planWeek for all behaviors
     returns a list of tuples representing all behaviors and target values
     """
     goalList = []
@@ -81,12 +87,13 @@ def diary(behavior, dayNum):
             actualValue = int(actualValue)
             break
         except ValueError:
-            print ('Please enter a number')
+            print('Please enter a number')
     return actualValue
 
 
 def diaryAll(dayNum):
     """
+    calls diary for all behaviors
     returns a list of tuples representing all behaviors and diary entries for one day
     """
     actualList = []
@@ -135,56 +142,65 @@ def enterData(weekNum):
                         dayNum = daysOfWeek.index(currentDay)
                         break
                     else:
-                        print ('Please try again.')
+                        print('Please try again.')
                 updates = diaryAll(dayNum)
                 for i in updates:
                     userActuals[weekNum].updateSingle(i[0], dayNum, i[1])
-            return (userGoals[weekNum], userActuals[weekNum])
+            return userGoals[weekNum], userActuals[weekNum]
         else:
-            print ('Please try again.')
+            print('Please try again.')
 
 
 def initialize():
     """
     runs the user interface
     """
-    print ('Welcome to the wellness app.')
+    print('Welcome to the wellness app.')
     while True:
-        weekNum = input('Enter the week number (1-52)')
-        try:
-            weekNum = int(weekNum)
-            if weekNum in range(1, 53):
-                break
+        mode0 = input('Enter "s" select a week or "q" to quit.')
+        if mode0 in ['s','q']:
+            if mode0 == 's':
+                while True:
+                    weekNum = input('Enter the week number (1-52)')
+                    try:
+                        weekNum = int(weekNum)
+                        if weekNum in range(1, 53):
+                            break
+                        else:
+                            print('Please try again.')
+                    except ValueError:
+                        print('Please try again.')
+                while True:
+                    mode1 = input('Enter "w" to write to your diary, "v" to view progress, or "b" to go back.')
+                    if mode1 in ['w', 'v', 'b']:
+                        if mode1 == 'w':
+                            weeks = enterData(weekNum)
+                        elif mode1 == 'v':
+                            try:
+                                plotWeek(weeks[0].diary, weeks[1].diary)
+                            except UnboundLocalError:
+                                print('You have not logged any data yet. Please try the diary.')
+                        else:
+                            break
+                    else:
+                        print('Please try again.')
             else:
-                print ('Please try again.')
-        except ValueError:
-            print ('Please try again.')
-    while True:
-        mode1 = input('Enter "d" to access your diary, "v" to see progress, or "q" to quit.')
-        if mode1 in ['d', 'v', 'q']:
-            if mode1 == 'd':
-                weeks = enterData(weekNum)
-            elif mode1 == 'v':
-                try:
-                    plotWeek(weeks[0].diary, weeks[1].diary)
-                except UnboundLocalError:
-                    print ('You have not logged any data yet. Please try the diary.')
-            else:
-                print ("Bye!")
+                print('Bye!')
                 break
         else:
-            print ('Please try again.')
+            print('Please try again.')
+
 
 
 # # TESTS
 #
 # # building / updating a week
 # testWeek = week(1,2017)
-# print (testWeek)
+# print(testWeek)
 # testWeek.updateWeek('calorie', [1000,1000,1000,1000,2000,2000,1000])
-# print (testWeek.diary)
+# print(testWeek.diary)
 # testWeek.updateSingle('calorie',5,3000)
-# print (testWeek.diary)
+# print(testWeek.diary)
 #
 # # entering goals
 # planWeek("workout")
