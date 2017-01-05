@@ -8,13 +8,13 @@ behaviors = ['calorie']
 # # full list
 # behaviors = ['calorie', 'workout', 'meditation']
 
+testUser = 'kls'
+
 from pymongo import MongoClient
 client = MongoClient()
 
 db = client.wellnessdb
 coll = db.weeks
-
-userData = {}
 
 class week(object):
     """
@@ -129,22 +129,23 @@ def plotWeek(goals,actual={}):
         plotNum += 1
 
 
-def enterData(weekNum):
+def enterData(weekNum,userData):
     """
     enables user input for planning or journal mode
-    returns the target week and the actual week
+    returns updated userData dictionary
     """
-    if (weekNum, 'goal') not in userData.keys():
-        userData[(weekNum, 'goal')] = week(weekNum, '2017','goal','kls')
-    if (weekNum, 'actual') not in userData.keys():
-        userData[(weekNum, 'actual')] = week(weekNum, '2017','actual','kls')
+    newData = userData
+    if (weekNum, 'goal') not in newData.keys():
+        newData[(weekNum, 'goal')] = week(weekNum, '2017', 'goal', testUser)
+    if (weekNum, 'actual') not in newData.keys():
+        newData[(weekNum, 'actual')] = week(weekNum, '2017', 'actual', testUser)
     while True:
         mode2 = input('Enter "p" to plan your week or "r" to record a journal entry.')
         if mode2 in ['p','r']:
             if mode2 == 'p':
                 updates = planWeekAll()
                 for i in updates:
-                    userData[(weekNum, 'goal')].updateWeek(i[0], i[1])
+                    newData[(weekNum, 'goal')].updateWeek(i[0], i[1])
             else:
                 while True:
                     currentDay = input('Enter the day (Sunday-Saturday)')
@@ -155,14 +156,16 @@ def enterData(weekNum):
                         print('Please try again.')
                 updates = journalAll(dayNum)
                 for i in updates:
-                    userData[(weekNum, 'actual')].updateSingle(i[0], dayNum, i[1])
-            return userData[(weekNum, 'goal')], userData[(weekNum, 'actual')]
+                    newData[(weekNum, 'actual')].updateSingle(i[0], dayNum, i[1])
+            return newData
         else:
             print('Please try again.')
 
 def loaddb():
 
-    previousUserData= coll.find({"user": "kls"})
+    previousUserData= coll.find({"user": testUser})
+
+    userData = {}
 
     for document in previousUserData:
         loadWeek = week(document["week"], document["year"], document["category"], document["user"])
@@ -170,6 +173,8 @@ def loaddb():
         userData[(document["week"],document["category"])] = loadWeek
 
     return userData
+
+
 def initialize():
     """
     runs the user interface
@@ -178,7 +183,7 @@ def initialize():
     print('Welcome to the wellness app.')
     while True:
         mode0 = input('Enter "s" select a week or "q" to quit.')
-        if mode0 in ['s','q']:
+        if mode0 in ['s', 'q']:
             if mode0 == 's':
                 while True:
                     weekNum = input('Enter the week number (1-52)')
@@ -194,10 +199,11 @@ def initialize():
                     mode1 = input('Enter "w" to write to your journal, "v" to view progress, or "b" to go back.')
                     if mode1 in ['w', 'v', 'b']:
                         if mode1 == 'w':
-                            enterData(weekNum)
+                            userData = enterData(weekNum, userData)
                         elif mode1 == 'v':
                             try:
-                                plotWeek(userData[(weekNum,'goal')].journal, (userData[(weekNum,'actual')].journal if (weekNum,'actual') in userData.keys() else {}))
+                                plotWeek(userData[(weekNum, 'goal')].journal, (userData[(weekNum, 'actual')].journal if
+                                                                               (weekNum, 'actual') in userData.keys() else {}))
                             except KeyError:
                                 print('You have not logged any data yet. Please try writing to the journal first.')
                         else:
@@ -240,8 +246,8 @@ def initialize():
 #     print(document['year'])
 #
 # # loading data
-# print(userGoals)
-# print(userGoals[1].journal)
+# print(userData)
+# print(userData[1].journal)
 #
 # # loading data (fcn)
 # print(loaddb())
