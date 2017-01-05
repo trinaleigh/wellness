@@ -14,8 +14,7 @@ client = MongoClient()
 db = client.wellnessdb
 coll = db.weeks
 
-userGoals = {}
-userActuals = {}
+userData = {}
 
 class week(object):
     """
@@ -135,17 +134,17 @@ def enterData(weekNum):
     enables user input for planning or journal mode
     returns the target week and the actual week
     """
-    if weekNum not in userGoals.keys():
-        userGoals[weekNum] = week(weekNum, '2017','goal','kls')
-    if weekNum not in userActuals.keys():
-        userActuals[weekNum] = week(weekNum, '2017','actual','kls')
+    if (weekNum, 'goal') not in userData.keys():
+        userData[(weekNum, 'goal')] = week(weekNum, '2017','goal','kls')
+    if (weekNum, 'actual') not in userData.keys():
+        userData[(weekNum, 'actual')] = week(weekNum, '2017','actual','kls')
     while True:
         mode2 = input('Enter "p" to plan your week or "r" to record a journal entry.')
         if mode2 in ['p','r']:
             if mode2 == 'p':
                 updates = planWeekAll()
                 for i in updates:
-                    userGoals[weekNum].updateWeek(i[0], i[1])
+                    userData[(weekNum, 'goal')].updateWeek(i[0], i[1])
             else:
                 while True:
                     currentDay = input('Enter the day (Sunday-Saturday)')
@@ -156,33 +155,26 @@ def enterData(weekNum):
                         print('Please try again.')
                 updates = journalAll(dayNum)
                 for i in updates:
-                    userActuals[weekNum].updateSingle(i[0], dayNum, i[1])
-            return userGoals[weekNum], userActuals[weekNum]
+                    userData[(weekNum, 'actual')].updateSingle(i[0], dayNum, i[1])
+            return userData[(weekNum, 'goal')], userData[(weekNum, 'actual')]
         else:
             print('Please try again.')
 
 def loaddb():
 
-    goalData= coll.find({"category": "goal"})
-    actualData = coll.find({"category": "actual"})
+    previousUserData= coll.find({"user": "kls"})
 
-    for document in goalData:
+    for document in previousUserData:
         loadWeek = week(document["week"], document["year"], document["category"], document["user"])
         loadWeek.journal = document["journal"]
-        userGoals[document["week"]] = loadWeek
+        userData[(document["week"],document["category"])] = loadWeek
 
-    for document in actualData:
-        loadWeek = week(document["week"], document["year"], document["category"], document["user"])
-        loadWeek.journal = document["journal"]
-        userActuals[document["week"]] = loadWeek
-
-    return userGoals, userActuals
-
+    return userData
 def initialize():
     """
     runs the user interface
     """
-    userGoals, userActuals = loaddb()
+    userData = loaddb()
     print('Welcome to the wellness app.')
     while True:
         mode0 = input('Enter "s" select a week or "q" to quit.')
@@ -205,7 +197,7 @@ def initialize():
                             enterData(weekNum)
                         elif mode1 == 'v':
                             try:
-                                plotWeek(userGoals[weekNum].journal, (userActuals[weekNum].journal if weekNum in userActuals.keys() else {}))
+                                plotWeek(userData[(weekNum,'goal')].journal, (userData[(weekNum,'actual')].journal if (weekNum,'actual') in userData.keys() else {}))
                             except KeyError:
                                 print('You have not logged any data yet. Please try writing to the journal first.')
                         else:
