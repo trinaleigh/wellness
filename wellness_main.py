@@ -129,25 +129,42 @@ def plotWeek(goals,actual={}):
         plotNum += 1
 
 
-def enterData(weekNum,userData):
+def enterData(weekNum,userData,addLog,changeLog):
     """
     enables user input for planning or journal mode
     returns updated userData dictionary
     """
     newData = userData
-    if (weekNum, 'goal') not in newData.keys():
-        newData[(weekNum, 'goal')] = week(weekNum, '2017', 'goal', testUser)
-    if (weekNum, 'actual') not in newData.keys():
-        newData[(weekNum, 'actual')] = week(weekNum, '2017', 'actual', testUser)
+    newAdds = addLog
+    newChanges = changeLog
+
     while True:
         mode2 = input('Enter "p" to plan your week or "r" to record a journal entry.')
-        if mode2 in ['p','r']:
+
+        if mode2 in ['p', 'r']:
             if mode2 == 'p':
+                # generate new week (if necessary) and log changes for db updates later
+                if (weekNum, 'goal') not in newData.keys():
+                    newData[(weekNum, 'goal')] = week(weekNum, '2017', 'goal', testUser)
+                    newAdds.append((weekNum, 'goal'))
+                elif (weekNum, 'goal') not in newChanges and (weekNum, 'goal') not in newAdds:
+                    newChanges.append((weekNum, 'goal'))
+
+                # prompt user and apply updates to the week
                 updates = planWeekAll()
                 for i in updates:
                     newData[(weekNum, 'goal')].updateWeek(i[0], i[1])
+
             else:
                 while True:
+                    # generate new week (if necessary) and log changes for db updates later
+                    if (weekNum, 'actual') not in newData.keys():
+                        newData[(weekNum, 'actual')] = week(weekNum, '2017', 'actual', testUser)
+                        newAdds.append((weekNum, 'actual'))
+                    elif (weekNum, 'actual') not in newChanges and (weekNum, 'goal') not in newAdds:
+                        newChanges.append((weekNum, 'actual'))
+
+                    # prompt user and apply updates to the week
                     currentDay = input('Enter the day (Sunday-Saturday)')
                     if currentDay in daysOfWeek:
                         dayNum = daysOfWeek.index(currentDay)
@@ -157,9 +174,12 @@ def enterData(weekNum,userData):
                 updates = journalAll(dayNum)
                 for i in updates:
                     newData[(weekNum, 'actual')].updateSingle(i[0], dayNum, i[1])
-            return newData
+
+
+            return newData, newAdds, newChanges
         else:
             print('Please try again.')
+
 
 def loaddb():
 
@@ -175,11 +195,39 @@ def loaddb():
     return userData
 
 
+def writeData(addLog,changeLog,userData):
+
+    for i in addLog:
+        thisRecord = {}
+        thisRecord['week'] = userData[i].weekNumber
+        thisRecord['year'] = userData[i].year
+        thisRecord['category'] = userData[i].category
+        thisRecord['user'] = userData[i].user
+        thisRecord['journal'] = userData[i].journal
+        print('Added: ')
+        print(thisRecord)
+        # result = coll.insert_one(thisRecord)
+        # return result.inserted_ids
+
+    for i in changeLog:
+        thisRecord = {}
+        thisRecord['week'] = userData[i].weekNumber
+        thisRecord['year'] = userData[i].year
+        thisRecord['category'] = userData[i].category
+        thisRecord['user'] = userData[i].user
+        thisRecord['journal'] = userData[i].journal
+        print('Changed: ')
+        print(thisRecord)
+        # need to update instead of insert
+
 def initialize():
     """
     runs the user interface
     """
     userData = loaddb()
+    addLog = []
+    changeLog = []
+
     print('Welcome to the wellness app.')
     while True:
         mode0 = input('Enter "s" select a week or "q" to quit.')
@@ -199,7 +247,7 @@ def initialize():
                     mode1 = input('Enter "w" to write to your journal, "v" to view progress, or "b" to go back.')
                     if mode1 in ['w', 'v', 'b']:
                         if mode1 == 'w':
-                            userData = enterData(weekNum, userData)
+                            userData, addLog, changeLog = enterData(weekNum, userData, addLog, changeLog)
                         elif mode1 == 'v':
                             try:
                                 plotWeek(userData[(weekNum, 'goal')].journal, (userData[(weekNum, 'actual')].journal if
@@ -211,6 +259,8 @@ def initialize():
                     else:
                         print('Please try again.')
             else:
+                print("Updates: ")
+                print(writeData(addLog, changeLog, userData))
                 print('Bye!')
                 break
         else:
@@ -251,6 +301,12 @@ def initialize():
 #
 # # loading data (fcn)
 # print(loaddb())
+#
+# # logging change
+# testWeek = week(1,2017,'goal','kls')
+# testUserData={(1,'goal'): testWeek}
+# testChangeLog = [(1,'goal')]
+# writeData(testChangeLog,testUserData)
 
 # initialization
 initialize()
