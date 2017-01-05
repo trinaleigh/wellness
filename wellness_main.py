@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 
 daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-# short list for testing
-behaviors = ['calorie']
+# # short list for testing
+# behaviors = ['calorie']
 
-# # full list
-# behaviors = ['calorie', 'workout', 'meditation']
+# full list
+behaviors = ['calorie', 'workout', 'meditation']
 
 testUser = 'kls'
 
@@ -197,6 +197,8 @@ def loaddb():
 
 def writeData(addLog,changeLog,userData):
 
+    updateTotal = []
+
     for i in addLog:
         thisRecord = {}
         thisRecord['week'] = userData[i].weekNumber
@@ -204,21 +206,17 @@ def writeData(addLog,changeLog,userData):
         thisRecord['category'] = userData[i].category
         thisRecord['user'] = userData[i].user
         thisRecord['journal'] = userData[i].journal
-        print('Added: ')
-        print(thisRecord)
-        # result = coll.insert_one(thisRecord)
-        # return result.inserted_ids
+        # insert new records to mongodb
+        result = coll.insert_one(thisRecord)
+        updateTotal.append(result)
 
     for i in changeLog:
-        thisRecord = {}
-        thisRecord['week'] = userData[i].weekNumber
-        thisRecord['year'] = userData[i].year
-        thisRecord['category'] = userData[i].category
-        thisRecord['user'] = userData[i].user
-        thisRecord['journal'] = userData[i].journal
-        print('Changed: ')
-        print(thisRecord)
         # need to update instead of insert
+        result = coll.update_one({"user": testUser, "week": userData[i].weekNumber, "year": userData[i].year,
+                                  "category": userData[i].category}, {"$set": {"journal": userData[i].journal}})
+        updateTotal.append(result)
+
+    return updateTotal
 
 def initialize():
     """
@@ -288,13 +286,6 @@ def initialize():
 #
 # # journal entry
 # journal('calorie',3)
-#
-# # db access
-# cursor = coll.find({"user": "kls"})
-# for document in cursor:
-#     print(document)
-#     print(document['year'])
-#
 # # loading data
 # print(userData)
 # print(userData[1].journal)
@@ -307,6 +298,12 @@ def initialize():
 # testUserData={(1,'goal'): testWeek}
 # testChangeLog = [(1,'goal')]
 # writeData(testChangeLog,testUserData)
+#
+# # db access
+# cursor = coll.find({"user": "kls"})
+# for document in cursor:
+#     print(document)
+#     print(document['year'])
 
 # initialization
 initialize()
