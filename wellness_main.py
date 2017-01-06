@@ -118,12 +118,17 @@ def plotWeek(goals,actual={}):
     plotNum = 1
     for i in behaviors:
         plt.figure(plotNum)
-        plt.plot(x, goals[i], '-g', label = 'Target')
+        plt.plot(x, goals[i], '-', color='#3FAEB2', label='Target',linewidth=4.0)
+        plt.title('progress for goal: ' + i)
+        plt.xlabel('days of week')
+        plt.xticks(x, daysOfWeek)
+        plt.xlim(0,8)
+        plt.ylabel(i + ' count')
         if actual != {}:
-            plt.plot(x, actual[i], '-r', label = 'Logged')
+            plt.bar(x, actual[i], width=0.2, align='center', label='Actual', color = '#DE1A64')
             plt.ylim(0, max((max(goals[i]), max(actual[i])))*1.2)
         else:
-            plt.ylim(0, max(goals[i])* 1.2)
+            plt.ylim(0, max(goals[i]) * 1.2)
         plt.legend()
         plt.show()
         plotNum += 1
@@ -280,9 +285,19 @@ def initialize():
 # planWeek("workout")
 # planWeek("calorie")
 #
-# # plot
-# plotWeek(testWeek.journal,testWeek.journal)
-# plotWeek(testWeek.journal)
+# # plotting - goals only and goals / actuals
+# testWeek1 = week(1,2017,'goal','kls')
+# testWeek1.updateWeek('calorie', [1000,1000,1000,1000,2000,2000,1000])
+# testWeek1.updateWeek('workout', [1,1,1,1,1,1,1])
+# testWeek1.updateWeek('meditation', [0,0,0,1,0,0,1])
+#
+#
+# testWeek2 = week(1,2017,'actual','kls')
+# testWeek2.updateWeek('calorie', [2000,2000,1000,1000,2000,1200,1200])
+#
+# # plotWeek(testWeek1.journal)
+#
+# plotWeek(testWeek1.journal,testWeek2.journal)
 #
 # # journal entry
 # journal('calorie',3)
