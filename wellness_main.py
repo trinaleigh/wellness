@@ -1,32 +1,34 @@
+# import matplotlib for plotting
 import matplotlib.pyplot as plt
 
+# set days of the week to display in prompts / graphs
 daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-# # short list for testing
-# behaviors = ['calorie']
-
-# full list
+# list behaviors to track (note: shorten for quicker testing)
 behaviors = ['calorie', 'workout', 'meditation']
 
-testUser = 'kls'
+# hard code username for now
+currentUser = 'kls'
 
+# import MongoDB and select database
 from pymongo import MongoClient
 client = MongoClient()
-
 db = client.wellnessdb
 coll = db.weeks
 
 class week(object):
     """
-    represents a single week and associated targets
+    represents a single week for a given user
+    category: indicates whether a week contains target values or actual values
+    journal: contains  behavior values
     """
 
-    def __init__(self, weekNumber, year, category, currentUser):
+    def __init__(self, weekNumber, year, category, username):
         self.name = 'Week ' + str(weekNumber) + ' ' + str(year)
         self.weekNumber = weekNumber
         self.year = year
         self.category = category
-        self.user = currentUser
+        self.user = username
         # create empty placeholders for the behaviors we want to track:
         self.journal = {}
         for i in behaviors:
@@ -82,7 +84,7 @@ def planWeekAll():
     return goalList
 
 
-def journal(behavior, dayNum):
+def planDay(behavior, dayNum):
     """
     prompts the user for journal entry
     returns a value for the given behavior and day
@@ -98,14 +100,14 @@ def journal(behavior, dayNum):
     return actualValue
 
 
-def journalAll(dayNum):
+def planDayAll(dayNum):
     """
     calls journal for all behaviors
     returns a list of tuples representing all behaviors and journal entries for one day
     """
     actualList = []
     for behavior in behaviors:
-        actualList.append((behavior, journal(behavior,dayNum)))
+        actualList.append((behavior, planDay(behavior,dayNum)))
     return actualList
 
 
@@ -137,7 +139,7 @@ def plotWeek(goals,actual={}):
 def enterData(weekNum,userData,addLog,changeLog):
     """
     enables user input for planning or journal mode
-    returns updated userData dictionary
+    returns updated userData dictionary, plus updated logs of additions/changes
     """
     newData = userData
     newAdds = addLog
@@ -150,7 +152,7 @@ def enterData(weekNum,userData,addLog,changeLog):
             if mode2 == 'p':
                 # generate new week (if necessary) and log changes for db updates later
                 if (weekNum, 'goal') not in newData.keys():
-                    newData[(weekNum, 'goal')] = week(weekNum, '2017', 'goal', testUser)
+                    newData[(weekNum, 'goal')] = week(weekNum, '2017', 'goal', currentUser)
                     newAdds.append((weekNum, 'goal'))
                 elif (weekNum, 'goal') not in newChanges and (weekNum, 'goal') not in newAdds:
                     newChanges.append((weekNum, 'goal'))
@@ -164,7 +166,7 @@ def enterData(weekNum,userData,addLog,changeLog):
                 while True:
                     # generate new week (if necessary) and log changes for db updates later
                     if (weekNum, 'actual') not in newData.keys():
-                        newData[(weekNum, 'actual')] = week(weekNum, '2017', 'actual', testUser)
+                        newData[(weekNum, 'actual')] = week(weekNum, '2017', 'actual', currentUser)
                         newAdds.append((weekNum, 'actual'))
                     elif (weekNum, 'actual') not in newChanges and (weekNum, 'goal') not in newAdds:
                         newChanges.append((weekNum, 'actual'))
@@ -176,19 +178,23 @@ def enterData(weekNum,userData,addLog,changeLog):
                         break
                     else:
                         print('Please try again.')
-                updates = journalAll(dayNum)
+                updates = planDayAll(dayNum)
                 for i in updates:
                     newData[(weekNum, 'actual')].updateSingle(i[0], dayNum, i[1])
 
-
             return newData, newAdds, newChanges
+
         else:
             print('Please try again.')
 
 
 def loaddb():
+    """
+    loads existing data from MongoDB
+    returns a dictionary of weeks
+    """
 
-    previousUserData= coll.find({"user": testUser})
+    previousUserData= coll.find({"user": currentUser})
 
     userData = {}
 
@@ -201,6 +207,10 @@ def loaddb():
 
 
 def writeData(addLog,changeLog,userData):
+    """
+    takes in the log of additions, log of changes, and current user data dictionary
+    writes updates to MongoDB
+    """
 
     updateTotal = []
 
@@ -217,7 +227,7 @@ def writeData(addLog,changeLog,userData):
 
     for i in changeLog:
         # need to update instead of insert
-        result = coll.update_one({"user": testUser, "week": userData[i].weekNumber, "year": userData[i].year,
+        result = coll.update_one({"user": currentUser, "week": userData[i].weekNumber, "year": userData[i].year,
                                   "category": userData[i].category}, {"$set": {"journal": userData[i].journal}})
         updateTotal.append(result)
 
@@ -269,6 +279,8 @@ def initialize():
         else:
             print('Please try again.')
 
+# initialization
+initialize()
 
 
 # # TESTS
@@ -291,16 +303,15 @@ def initialize():
 # testWeek1.updateWeek('workout', [1,1,1,1,1,1,1])
 # testWeek1.updateWeek('meditation', [0,0,0,1,0,0,1])
 #
-#
 # testWeek2 = week(1,2017,'actual','kls')
 # testWeek2.updateWeek('calorie', [2000,2000,1000,1000,2000,1200,1200])
 #
-# # plotWeek(testWeek1.journal)
-#
+# plotWeek(testWeek1.journal)
 # plotWeek(testWeek1.journal,testWeek2.journal)
 #
 # # journal entry
-# journal('calorie',3)
+# planDay('calorie',3)
+#
 # # loading data
 # print(userData)
 # print(userData[1].journal)
@@ -319,6 +330,3 @@ def initialize():
 # for document in cursor:
 #     print(document)
 #     print(document['year'])
-
-# initialization
-initialize()
